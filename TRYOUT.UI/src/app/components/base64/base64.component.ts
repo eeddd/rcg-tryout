@@ -10,16 +10,26 @@ export class Base64Component implements OnInit {
 
   encodedText: string = '';
 
+  isBusy: boolean = false;
+
   constructor(private service: Base64Service) { }
 
   ngOnInit(): void {
     this.service.startConnection();
     this.service.addListeners();
+    this.service.getPartialData().subscribe(data => this.encodedText += data);
+    this.service.getEncodedData().subscribe(data => this.encodedText = data);
+    this.service.getBusyData().subscribe(data => this.isBusy = data);
   }
 
   onConvert(inputText: string) {
     if (inputText.trim().length == 0) return;
 
+    this.encodedText = "";
     this.service.convertText(inputText)
+  }
+
+  onCancel() {
+    this.service.cancelConversion();
   }
 }

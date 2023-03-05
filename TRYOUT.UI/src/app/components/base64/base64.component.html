@@ -13,7 +13,7 @@
                         <label for="input-text" class="form-label">Text</label>
                         <input #text type="text" class="form-control form-control-lg" id="input-text" 
                             placeholder="Input text here.." 
-                            autocomplete="off">
+                            autocomplete="off" [readOnly]="isBusy">
                     </div>
 
                     <div class="mb-3">
@@ -23,8 +23,8 @@
 
                     <div class="mt-4">
                         <div class="d-flex justify-content-center">
-                            <button class="btn btn-lg btn-primary" (click)="onConvert(text.value)">Convert</button>
-                            <button class="btn btn-lg btn-secondary" [hidden]="true">Cancel</button>
+                            <button class="btn btn-lg btn-primary" (click)="onConvert(text.value)" [hidden]="isBusy">Convert</button>
+                            <button class="btn btn-lg btn-secondary" (click)="onCancel()" [hidden]="!isBusy">Cancel</button>
                         </div>
 
                     </div>
