@@ -1,0 +1,11 @@
+version: '3.9'
+
+services:
+  tryout.ui:
+    build: ./TRYOUT.UI
+    ports:
+      - "4200:80"
+  tryout:
+    build: ./TRYOUT
+    ports:
+      - "5000:80"
