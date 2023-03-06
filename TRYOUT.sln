@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TRYOUT", "TRYOUT\TRYOUT.csp
 EndProject
 Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "TRYOUT.UI", "TRYOUT.UI\TRYOUT.UI.esproj", "{DF7D2160-1F36-4685-AFA6-F0826EA26D99}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TRYOUT.TEST", "TRYOUT.TEST\TRYOUT.TEST.csproj", "{47586357-E20D-445C-9426-C5A39C6DBED0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +25,10 @@ Global
 		{DF7D2160-1F36-4685-AFA6-F0826EA26D99}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DF7D2160-1F36-4685-AFA6-F0826EA26D99}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DF7D2160-1F36-4685-AFA6-F0826EA26D99}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{47586357-E20D-445C-9426-C5A39C6DBED0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47586357-E20D-445C-9426-C5A39C6DBED0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47586357-E20D-445C-9426-C5A39C6DBED0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47586357-E20D-445C-9426-C5A39C6DBED0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
