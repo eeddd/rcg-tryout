@@ -1,85 +1,39 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using TRYOUT.Services;
 
 namespace TRYOUT.Hubs
 {
     public class Base64Hub : Hub
     {
-        public async Task Convert(string text)
+        private IBase64Service _base64Service;
+
+
+        public Base64Hub(IBase64Service base64Service)
         {
-            await Clients.Clients(Context.ConnectionId).SendAsync("conversionStarted", Context.ConnectionId);
-
-            AppClient appClient = new AppClient
-            {
-                Text = text,
-                ConnectionId = Context.ConnectionId,
-                token = new CancellationTokenSource(),
-                Clients = Clients,
-                Context = Context,
-            };
-
-            _clients.Add(Context.ConnectionId, appClient);
-
-            WaitCallback wc = new WaitCallback(Base64Conversion);
-            ThreadPool.QueueUserWorkItem(wc, appClient);
-
+            this._base64Service = base64Service;
         }
 
-        public void Cancel(string connectionId)
+
+        public async Task ConvertToBase64(string text, CancellationToken cancellationTokenSource)
         {
-            _clients[connectionId].token.Cancel(true);
-        }
+            string encodedText = _base64Service.ConvertToBase64(text);
 
-        private static IDictionary<string, AppClient> _clients = new Dictionary<string, AppClient>();
+            Random random = new Random();
 
-
-        private static void Base64Conversion(object msg)
-        {
-            AppClient client = (AppClient)msg;
-
-            ThreadPool.QueueUserWorkItem(s =>
+            for (int i = 0; i < encodedText.Length; i++)
             {
-                var encoded = System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(client.Text));
-                var rand = new Random(DateTime.Now.Millisecond);
-
-                //CancellationToken token = (CancellationToken) s;
-
-                DateTime dt = DateTime.Now;
-                TimeSpan ts = TimeSpan.Zero;
-
-
-                for (int i = 0; i < encoded.Length; i++)
+                if (cancellationTokenSource.IsCancellationRequested)
                 {
-                    if (client.token.Token.IsCancellationRequested)
-                        break;
-                    ts = DateTime.Now - dt;
-                    dt = DateTime.Now;
-                    var task = client.Clients.Clients(client.Context.ConnectionId).SendAsync("conversionUpdate", i, encoded[i]);
-                    var result = task.WaitAsync(ts);
-
-                    client.token.Token.WaitHandle.WaitOne(rand.Next(1000, 5000));
+                    break;
                 }
 
-                string textResult = client.token.Token.IsCancellationRequested ? "" : encoded;
-                string method = client.token.Token.IsCancellationRequested ? "conversionCancelled" : "conversionCompleted";
+                await Clients.Clients(Context.ConnectionId).SendAsync("conversionUpdate", encodedText[i]);
 
-                var taskcomplete = client.Clients.Clients(client.Context.ConnectionId).SendAsync(method, textResult);
-                var resultcomplete = taskcomplete.WaitAsync(ts);
+                await Task.Delay(random.Next(1, 5) * 1000);
+            }
 
-                _clients.Remove(client.ConnectionId);
-
-            }, client.token.Token);
+            await Clients.Clients(Context.ConnectionId).SendAsync("conversionCompleted", encodedText);
         }
-    }
 
-    class AppClient
-    {
-        public string Text { get; set; }
-        public string ConnectionId { get; set; }
-
-        public CancellationTokenSource token { get; set; }
-
-        public IHubCallerClients Clients { get; set; }
-
-        public HubCallerContext Context { get; set; }
-    }
+    } 
 }

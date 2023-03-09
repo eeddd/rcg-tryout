@@ -14,13 +14,14 @@ export class Base64Service {
   private partialDataSubject = new Subject<any>;
   private busySubject = new Subject<boolean>;
 
-  private _connectionId: any;
+  private abortController?: AbortController;
+
 
   constructor() { }
 
   startConnection() {
     this.hubConnection = new HubConnectionBuilder()
-      .withUrl('http://localhost:5000/base64', {
+      .withUrl('https://localhost:7113/base64', {
         skipNegotiation: true,
         transport: HttpTransportType.WebSockets
       })
@@ -33,27 +34,29 @@ export class Base64Service {
   }
 
   addListeners() {
-    this.hubConnection?.on("conversionStarted", (id) => {
-      this.busySubject.next(true);
-      this._connectionId = id;
-    });
-    this.hubConnection?.on("conversionUpdate", (i, c) => this.partialDataSubject.next(c));
-    this.hubConnection?.on("conversionCompleted", (data) => {
-      this.encodedDataSubject.next(data);
+    this.hubConnection?.on("conversionUpdate", (c) => this.partialDataSubject.next(c));
+    this.hubConnection?.on("conversionCompleted", (encoded) => {
+      this.encodedDataSubject.next(encoded);
       this.busySubject.next(false);
     });
-
-    this.hubConnection?.on("conversionCancelled", () => this.busySubject.next(false))
   }
 
   convertText(text: string) {
-    this.hubConnection?.invoke("convert", text)
-      .catch(err => console.error(err));
+    this.abortController = new AbortController();
+
+    this.abortController?.signal.addEventListener('abort', (e) => {
+      this.busySubject.next(false);
+      console.log('aborted');
+    });
+
+    this.busySubject.next(true);
+
+    this.hubConnection?.invoke("convertToBase64", text, this.abortController?.signal)
+      .catch(err => console.error("convertText:ERROR:", err));
   }
 
   cancelConversion() {
-    this.hubConnection?.invoke("cancel", this._connectionId)
-      .catch(err => console.error(err));
+    this.abortController?.abort();
   }
 
   getEncodedData() {
