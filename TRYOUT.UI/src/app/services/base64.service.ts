@@ -22,7 +22,7 @@ export class Base64Service {
 
   startConnection() {
     this.hubConnection = new HubConnectionBuilder()
-      .withUrl('https://localhost:5001/base64', {
+      .withUrl('http://localhost:5001/base64', {
         skipNegotiation: true,
         transport: HttpTransportType.WebSockets
       })
