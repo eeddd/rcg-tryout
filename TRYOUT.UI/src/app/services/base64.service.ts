@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HubConnection, HubConnectionBuilder, HttpTransportType } from '@microsoft/signalr';
+import { HubConnection, HubConnectionBuilder, HttpTransportType, AbortSignal } from '@microsoft/signalr';
 import { Observable, Subject } from 'rxjs';
 
 
@@ -15,13 +15,14 @@ export class Base64Service {
   private busySubject = new Subject<boolean>;
 
   private abortController?: AbortController;
-
+  
+  private connectionId: string = '';
 
   constructor() { }
 
   startConnection() {
     this.hubConnection = new HubConnectionBuilder()
-      .withUrl('https://localhost:7113/base64', {
+      .withUrl('https://localhost:5001/base64', {
         skipNegotiation: true,
         transport: HttpTransportType.WebSockets
       })
@@ -34,7 +35,18 @@ export class Base64Service {
   }
 
   addListeners() {
+    this.hubConnection?.on("conversionStarted", (id) => {
+      this.connectionId = id;
+      console.log("connectionId:", this.connectionId);
+    });
+
     this.hubConnection?.on("conversionUpdate", (c) => this.partialDataSubject.next(c));
+    
+    this.hubConnection?.on("conversionCancelled", (id) => {
+      console.log("Cancelled:", id);
+      this.busySubject.next(false);
+    });
+
     this.hubConnection?.on("conversionCompleted", (encoded) => {
       this.encodedDataSubject.next(encoded);
       this.busySubject.next(false);
@@ -51,12 +63,15 @@ export class Base64Service {
 
     this.busySubject.next(true);
 
-    this.hubConnection?.invoke("convertToBase64", text, this.abortController?.signal)
+    this.hubConnection?.invoke("processConversion", text)
       .catch(err => console.error("convertText:ERROR:", err));
   }
 
   cancelConversion() {
-    this.abortController?.abort();
+    // this.abortController?.abort();
+    console.log('clicked Cancel')
+    this.hubConnection?.invoke("cancelConversion", this.connectionId)
+      .catch(err => console.error(err));
   }
 
   getEncodedData() {

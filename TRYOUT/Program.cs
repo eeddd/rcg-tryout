@@ -8,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
-builder.Services.AddScoped<IBase64Service, Base64Service>();
+builder.Services.AddScoped<IConverterService, Base64Service>();
 
 var app = builder.Build();
 
@@ -21,7 +21,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapHub<Base64Hub>("/base64");
+app.MapHub<ProcessConversionHub>("/base64");
 
 
 app.Run();

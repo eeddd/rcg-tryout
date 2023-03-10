@@ -2,9 +2,9 @@
 
 namespace TRYOUT.Services
 {
-    public class Base64Service : IBase64Service
+    public class Base64Service : IConverterService
     {
-        string IBase64Service.ConvertToBase64(string text)
+        string IConverterService.Convert(string text)
         {
             return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(text));
         }

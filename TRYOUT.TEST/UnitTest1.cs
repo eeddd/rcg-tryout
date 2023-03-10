@@ -15,12 +15,12 @@ namespace TRYOUT.TEST
         public async Task Test1()
         {
             // Arrange
-            IBase64Service service = new Base64Service();
+            IConverterService service = new Base64Service();
             var inputText = "Hello";
             var expectedValue = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(inputText));
 
             // Act
-            var result = service.ConvertToBase64(inputText);
+            var result = service.Convert(inputText);
 
 
             // Assert
