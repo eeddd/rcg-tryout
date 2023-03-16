@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HubConnection, HubConnectionBuilder, HttpTransportType, AbortSignal } from '@microsoft/signalr';
-import { Observable, Subject } from 'rxjs';
+import { HubConnection, HubConnectionBuilder, HttpTransportType } from '@microsoft/signalr';
+import { Subject } from 'rxjs';
 
 
 @Injectable({
@@ -14,15 +14,11 @@ export class Base64Service {
   private partialDataSubject = new Subject<any>;
   private busySubject = new Subject<boolean>;
 
-  private abortController?: AbortController;
-  
-  private connectionId: string = '';
-
   constructor() { }
 
   startConnection() {
     this.hubConnection = new HubConnectionBuilder()
-      .withUrl('http://localhost:5001/base64', {
+      .withUrl('http://localhost:5001/encode', {
         skipNegotiation: true,
         transport: HttpTransportType.WebSockets
       })
@@ -35,42 +31,31 @@ export class Base64Service {
   }
 
   addListeners() {
-    this.hubConnection?.on("conversionStarted", (id) => {
-      this.connectionId = id;
-      console.log("connectionId:", this.connectionId);
+    this.hubConnection?.on("conversionStarted", (connectionId) => {
+      this.busySubject.next(true);
+      console.log("Process started", connectionId);
     });
 
     this.hubConnection?.on("conversionUpdate", (c) => this.partialDataSubject.next(c));
     
-    this.hubConnection?.on("conversionCancelled", (id) => {
-      console.log("Cancelled:", id);
+    this.hubConnection?.on("conversionCancelled", (connectionId) => {
       this.busySubject.next(false);
+      console.log("Process cancelled", connectionId);
     });
 
-    this.hubConnection?.on("conversionCompleted", (encoded) => {
-      this.encodedDataSubject.next(encoded);
+    this.hubConnection?.on("conversionCompleted", (connectionId) => {
       this.busySubject.next(false);
+      console.log("Process completed", connectionId);
     });
   }
 
   convertText(text: string) {
-    this.abortController = new AbortController();
-
-    this.abortController?.signal.addEventListener('abort', (e) => {
-      this.busySubject.next(false);
-      console.log('aborted');
-    });
-
-    this.busySubject.next(true);
-
     this.hubConnection?.invoke("processConversion", text)
       .catch(err => console.error("convertText:ERROR:", err));
   }
 
   cancelConversion() {
-    // this.abortController?.abort();
-    console.log('clicked Cancel')
-    this.hubConnection?.invoke("cancelConversion", this.connectionId)
+    this.hubConnection?.invoke("cancelConversion")
       .catch(err => console.error(err));
   }
 

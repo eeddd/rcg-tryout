@@ -1,51 +1,53 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Castle.Components.DictionaryAdapter.Xml;
+using Microsoft.AspNetCore.SignalR;
 
 namespace TRYOUT.Hubs
 {
-    public class LoopCharactersProcess
+    public class LoopCharactersProcess : ILoopProcess
     {
-        private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
+        private CancellationTokenSource? _tokenSource;
+
+        private IHubContext<ConversionHub> _hubContext;
+
         public string ConnectionId { get; set; } = "";
 
-        private IHubCallerClients _clients;
-
-        public LoopCharactersProcess(string connectionId, IHubCallerClients clients)
+        public LoopCharactersProcess(IHubContext<ConversionHub> hubContext)
         {
-            _clients = clients;
-            ConnectionId = connectionId;
+            _hubContext = hubContext;
+            var hub = hubContext as ConversionHub;
         }
 
         public void StartLoopProcess(string text)
         {
-            _clients.Clients(ConnectionId).SendAsync("conversionStarted", ConnectionId);
+            _tokenSource = new CancellationTokenSource();
+            var token = _tokenSource.Token;
 
-            var cancellationToken = GetToken();
-
-            var randomizedSeconds = new Random();
-
-            foreach (char characterInText in text)
+            Task.Run(() =>
             {
-                if (cancellationToken.IsCancellationRequested)
+                _hubContext.Clients.Clients(ConnectionId).SendAsync("conversionStarted", ConnectionId);
+
+                var randomizeSeconds = new Random();
+
+                foreach (var character in text)
                 {
-                    _clients.Clients(ConnectionId).SendAsync("conversionCancelled", ConnectionId);
-                    return;
+                    if (token.IsCancellationRequested)
+                    {
+                        _hubContext.Clients.Clients(ConnectionId).SendAsync("conversionCancelled", ConnectionId);
+                        return;
+                    }
+
+                    Thread.Sleep(randomizeSeconds.Next(1, 5) * 1000);
+
+                    _hubContext.Clients.Clients(ConnectionId).SendAsync("conversionUpdate", character);
                 }
 
-                Thread.Sleep(randomizedSeconds.Next(1, 5) * 1000);
-
-                _clients.Clients(ConnectionId).SendAsync("conversionUpdate", characterInText);
-            }
-            _clients.Clients(ConnectionId).SendAsync("conversionCompleted", text);
+                _hubContext.Clients.Clients(ConnectionId).SendAsync("conversionCompleted", ConnectionId);
+            }, token);
         }
 
         public void StopLoopProcess()
         {
             _tokenSource?.Cancel();
-        }
-
-        public CancellationToken GetToken()
-        {
-            return _tokenSource.Token;
         }
 
     }

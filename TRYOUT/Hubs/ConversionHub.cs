@@ -9,31 +9,24 @@ namespace TRYOUT.Hubs
     {
         private IConverterService _converterService;
 
-        private static ConcurrentDictionary<string, LoopCharactersProcess> _processMap = new ConcurrentDictionary<string, LoopCharactersProcess>();
-        
-        public ConversionHub(IConverterService converterService)
+        private ILoopProcess _loopCharactersProcess;
+                
+        public ConversionHub(IConverterService converterService, ILoopProcess loopCharactersProcess)
         {
-            this._converterService = converterService;
+            _converterService = converterService;
+            _loopCharactersProcess = loopCharactersProcess;
         }
 
         public void ProcessConversion(string text)
         {
-            string encodedText = _converterService.Convert(text);
+            string encoded = _converterService.Convert(text);
 
-            var loopProcess = new LoopCharactersProcess(Context.ConnectionId, Clients);
-            
-            var task = Task.Run(() => loopProcess.StartLoopProcess(encodedText), loopProcess.GetToken());
-
-            _processMap.TryAdd(Context.ConnectionId, loopProcess);
+            _loopCharactersProcess.StartLoopProcess(encoded);
         }
 
-        public void CancelConversion(string connectionId)
+        public void CancelConversion()
         {
-            if (_processMap.ContainsKey(connectionId))
-            {
-                _processMap[connectionId].StopLoopProcess();
-                _processMap.TryRemove(connectionId, out _);
-            }
+            _loopCharactersProcess.StopLoopProcess();
         }
 
     }    

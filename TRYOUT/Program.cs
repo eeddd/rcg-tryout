@@ -1,14 +1,14 @@
+using Microsoft.AspNetCore.SignalR;
 using TRYOUT.Hubs;
 using TRYOUT.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
-builder.Services.AddSingleton<IConverterService, Base64Service>();
+builder.Services.AddTransient<IConverterService, Base64Service>();
+builder.Services.AddSingleton<ILoopProcess, LoopCharactersProcess>();
 
 var app = builder.Build();
 
@@ -21,7 +21,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapHub<ConversionHub>("/base64");
+app.MapHub<ConversionHub>("/encode");
 
 
 app.Run();
