@@ -10,7 +10,13 @@ namespace TRYOUT.Hubs
         private IConverterService _converterService;
 
         private ILoopProcess _loopCharactersProcess;
-                
+
+        public override Task OnConnectedAsync()
+        {
+            _loopCharactersProcess.ConnectionId = Context.ConnectionId;
+            return base.OnConnectedAsync();
+        }
+
         public ConversionHub(IConverterService converterService, ILoopProcess loopCharactersProcess)
         {
             _converterService = converterService;

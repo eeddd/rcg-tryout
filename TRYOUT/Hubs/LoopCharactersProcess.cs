@@ -14,7 +14,6 @@ namespace TRYOUT.Hubs
         public LoopCharactersProcess(IHubContext<ConversionHub> hubContext)
         {
             _hubContext = hubContext;
-            var hub = hubContext as ConversionHub;
         }
 
         public void StartLoopProcess(string text)
